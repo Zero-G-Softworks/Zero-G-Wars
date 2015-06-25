@@ -1,0 +1,33 @@
+# Environments
+.env.example
+.env.*.php
+.env.php
+.env
+
+# Laravel
+/bootstrap/compiled.php
+/vendor
+
+# Configuration
+/app/config/local
+/app/config/staging
+/app/config/production
+
+# OS
+.DS_Store
+.idea/
+vagrant
+.vagrant
+
+# Packages
+_ide_helper.php
+
+# Netbeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+.nb-gradle/

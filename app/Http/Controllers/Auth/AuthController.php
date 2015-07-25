@@ -6,6 +6,8 @@ use ZeroGWars\User;
 use Validator;
 use ZeroGWars\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
+use Illuminate\Http\Request;
+use Auth;
 
 class AuthController extends Controller
 {
@@ -29,7 +31,7 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('guest', ['except' => 'getLogout']);
+        //$this->middleware('guest', ['except' => 'getLogout']);
     }
 
     /**
@@ -60,5 +62,40 @@ class AuthController extends Controller
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
         ]);
+    }
+
+    /**
+     * Create a new user instance after a valid registration.
+     *
+     * @param  array  $data
+     * @return User
+     */
+    protected function createAJAX(Request $request)
+    {
+        return User::create([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'username' => $request->input('user'),
+            'password' => bcrypt($request->input('pass')),
+        ]);
+    }
+    
+    /**
+     * Handle an authentication attempt.
+     *
+     * @return Response
+     */
+    public function authenticate(Request $request)
+    {
+        if (Auth::check()) {
+            return "already logged in";
+        }
+        if (Auth::attempt(['username' => $request->input('user'), 'password' => $request->input('pass')]))
+        {
+            return [ "user" => Auth::user()->username ];
+        }
+        else {
+            return "failed";
+        }
     }
 }

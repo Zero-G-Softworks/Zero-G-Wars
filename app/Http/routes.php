@@ -15,14 +15,14 @@ Route::get('/', function() {
     return view('welcome');
 });
     
-Route::get('/game/{id}', function() {
+Route::get('/{id}', function() {
     return view("welcome");
 });
 
 /*
- * TODO: GET  game/:id gets current game information (spectator mode)
+ * TODO: 
  *       PUSH game/:id joins game if player spot is available
- *       if PUSH game/:id finds existing player2, it will return 403 forbidden and client will GET game/:id
+ *       if PUSH game/:id finds existing player2, it will return 403 forbidden
  */
 
 Route::group(['prefix' => '/api/v1'], function () {
@@ -32,7 +32,12 @@ Route::group(['prefix' => '/api/v1'], function () {
     Route::group(['prefix' => '/game'], function() {
         Route::post('/', 'GameController@create');
         Route::get('/', 'GameController@index');
+        Route::get('/shiptypes', 'GameController@shipTypes');
         Route::get('/{id}', 'GameController@show');
+        Route::post('/{id}/put/{ship}/{from}/{rotation}', 'MoveController@put');
+        Route::get('/{id}/hit/{tile}', 'MoveController@hit');
+        //Route::post
+        Route::get('/{id}/sanity_check', 'MoveController@sanity_check');
         /*
         Route::push('/{id}','GameController@join'); // Player 2 joins
         Route::push('/{id}/attack/{tile}','GameController@attack'); // Player attacks a tile on the board
@@ -43,6 +48,7 @@ Route::group(['prefix' => '/api/v1'], function () {
     
     Route::post('/auth/login', 'Auth\AuthController@authenticate');
     Route::post('/auth/register', 'Auth\AuthController@createAJAX');
+    Route::get('/auth/check', 'Auth\AuthController@check');
     Route::post('/auth/logout', function() {
         Auth::logout();
     });

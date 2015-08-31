@@ -65,7 +65,8 @@ class AuthController extends Controller
     }
 
     /**
-     * Create a new user instance after a valid registration.
+     * Create a new user instance after a valid registration through an AJAX
+     * request.
      *
      * @param  array  $data
      * @return User
@@ -88,7 +89,7 @@ class AuthController extends Controller
     public function authenticate(Request $request)
     {
         if (Auth::check()) {
-            return "already logged in";
+            return [ "user" => Auth::user()->username ];
         }
         if (Auth::attempt(['username' => $request->input('user'), 'password' => $request->input('pass')]))
         {
@@ -97,5 +98,18 @@ class AuthController extends Controller
         else {
             return "failed";
         }
+    }
+    
+    /**
+     * Check if the session is authenticated.
+     *
+     * @return Response
+     */
+    public function check() {
+        if (Auth::check()) {
+            return [ "user" => Auth::user()->username ];
+        }
+        else
+            return "not logged in";
     }
 }

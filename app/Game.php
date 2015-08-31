@@ -19,9 +19,19 @@ class Game extends Model
      * @var bool
      */
     public $timestamps = false;
+    
+    /**
+     * The ending tile used to indicated board size.
+     * 
+     * This value may be moved to the database in the future to support variable
+     * game board sizes.
+     * 
+     * @var string
+     */
+    public $end_tile = "O15";
 
     /**
-     * Show a list of all available flights.
+     * Find a particular game
      *
      * @return Response
      */

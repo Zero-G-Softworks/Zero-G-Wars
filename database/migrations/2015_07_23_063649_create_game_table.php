@@ -19,6 +19,7 @@ class CreateGameTable extends Migration
             $table->integer('player2')->unsigned()
                                       ->nullable();
             $table->boolean('winner')->nullable();
+            $table->integer('game_state')->nullable();
             $table->timestamps();
         });
     }

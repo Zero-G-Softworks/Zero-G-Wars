@@ -13,7 +13,7 @@ class Game extends Model
      * @var string
      */
     protected $table = "games";
-
+    
     /**
      * Indicates fields that should not be shown.
      *

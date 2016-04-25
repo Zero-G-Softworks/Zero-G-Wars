@@ -35,9 +35,11 @@ Route::group(['prefix' => '/api/v1'], function () {
         Route::get('/shiptypes', 'GameController@shipTypes');
         Route::get('/{id}', 'GameController@show');
         Route::post('/{id}/put/{ship}/{from}/{rotation}', 'MoveController@put');
+        Route::get('/{id}/put/{ship}/{from}/{rotation}', 'MoveController@put');
         Route::get('/{id}/hit/{tile}', 'MoveController@hit');
-        //Route::post
         Route::get('/{id}/sanity_check', 'MoveController@sanity_check');
+        
+        Route::get('/{id}/debug', 'MoveController@initialize');
         /*
         Route::push('/{id}','GameController@join'); // Player 2 joins
         Route::push('/{id}/attack/{tile}','GameController@attack'); // Player attacks a tile on the board

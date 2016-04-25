@@ -4,7 +4,7 @@ namespace ZeroGWars;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ShipType extends Model
+class GameState extends Model
 {
     /**
      * Indicates if the model should be timestamped.
@@ -12,4 +12,11 @@ class ShipType extends Model
      * @var bool
      */
     public $timestamps = false;
+    
+    /**
+     * Indicates fields that should not be shown.
+     *
+     * @var bool
+     */
+    protected $hidden = array('deleted_at', 'updated_at', 'created_at');
 }

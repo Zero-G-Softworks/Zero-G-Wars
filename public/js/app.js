@@ -192,6 +192,8 @@ window.app.controller( 'MainController', [ '$http', '$interval', '$location', fu
             });
         }
         
+        ctrl.updateConsole('/game/' + ctrl.game + '/put/' + ship.id + "/" + ctrl.tile + "/" + ctrl.shipRot);
+
         $http
         .post( api_base + '/game/' + ctrl.game + '/put/' + ship.id + "/" + ctrl.tile + "/" + ctrl.shipRot )
         .then(function (response) {
@@ -207,6 +209,8 @@ window.app.controller( 'MainController', [ '$http', '$interval', '$location', fu
             var toCol = response.data.target_tile[0].charCodeAt(0) - 64;
             var toRow = parseInt(response.data.target_tile[1]);
             
+            ctrl.updateConsole(response.data.source_tile + " - " + response.data.target_tile + " => " + fromCol  + "" + fromRow + " - " + toCol + "" + toRow);
+            
             var col = fromCol;
             var row = fromRow;
             var direction = 1;
@@ -215,14 +219,16 @@ window.app.controller( 'MainController', [ '$http', '$interval', '$location', fu
                 direction = -1;
             }
             
-            while( col !== toCol + 1 ) {
+            while( col !== toCol + direction ) {
+                ctrl.updateConsole( "h: " + col + "" + row + "" + direction );
                 thisTile = String.fromCharCode(64 + col) + "" + row;
                 ctrl.tileList[thisTile] = "X";
                 col += direction;
             }
             
             col = fromCol;
-            while( row !== toRow + 1 ) {
+            while( row !== toRow + direction ) {
+                ctrl.updateConsole( "v: " + col + "" + row + "" + direction );
                 thisTile = String.fromCharCode(64 + col) + "" + row;
                 ctrl.tileList[thisTile] = "X";
                 row += direction;
@@ -243,7 +249,6 @@ window.app.controller( 'MainController', [ '$http', '$interval', '$location', fu
     };
     
     ctrl.tileList = [];
-    ctrl.tileList["D5"] = "test";
     
     var range = [];
     for(var i=0;i<rows;i++) {

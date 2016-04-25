@@ -9,6 +9,7 @@ use ZeroGWars\Http\Controllers\Controller;
 use ZeroGWars\Move;
 use ZeroGWars\ShipType;
 use ZeroGWars\Game;
+use ZeroGWars\GameState;
 
 class MoveController extends Controller
 {
@@ -19,6 +20,48 @@ class MoveController extends Controller
                                'u', 'v', 'w', 'x', 'y',
                                'z'
                              );
+    
+    private $game = null;
+    private $game_state = null;
+    private $board = null;
+    private $ships = null;
+    
+    /**
+     * Initialize the current game state and member variables.
+     * 
+     * @param  int  $id
+     */
+    public function initialize($id, $nomoves = false)
+    {
+        $this->game = Game::where('public_id', '=', $id)->firstOrFail();
+        if( $this->game->game_state === null ) {
+            $this->board = array();
+            $this->board["p1"] = array();
+            $this->board["p2"] = array();
+            
+            $this->ships = array();
+            $this->ships["p1"] = array();
+            $this->ships["p2"] = array();
+            
+            $this->game_state = new GameState;
+            $this->game_state->board = json_encode($this->board);
+            $this->game_state->ships = json_encode($this->ships);
+            $this->game_state->save();
+            
+            $this->game->game_state = $this->game_state->id;
+            $this->game->save();
+        }
+        else {
+            $this->game_state = GameState::find($this->game->game_state);
+            $this->board = json_decode($this->game_state->board);
+            $this->ships = json_decode($this->game_state->ships);
+        }
+        print_r($this->board);
+        print_r($this->ships);
+        $sane = $this->sanity_check($nomoves);
+        if( $sane !== true ) { return ['error' => $sane]; }
+        else { return [true]; }
+    }
 
     /**
      * Convert a number pair to a tile address.
@@ -52,6 +95,19 @@ class MoveController extends Controller
         $row = intval($matches[2]);
         return [$col, $row];
     }
+    
+    private function isOutOfBounds($tile)
+    {
+        list($col, $row) = $this->tileToNum($tile);
+        list($maxCol, $maxRow) = $this->tileToNum($this->game->end_tile);
+        
+        if( ($col < 0 || $col > $maxCol) || ($row <0 || $row > $maxRow) ) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
     /**
      * Place the ship on the board based on a starting tile and a rotation.
@@ -64,21 +120,16 @@ class MoveController extends Controller
      */
     public function put($id, $ship, $from, $rotation)
     {
-        if( !$this->sanity_check($id, true) ) return ['error' => 'failed sanity check'];
-        $game = Game::where('public_id', '=', $id)->firstOrFail();
-        $type = ShipType::where('id', '=', $ship)->firstOrFail();
+        $init = $this->initialize($id, true);
+        if( $init !== [true] ) { return $init; }
         
-        $rotation = strtolower($rotation);
-        
-        list($col, $row) = $this->tileToNum($from);
-        list($maxCol, $maxRow) = $this->tileToNum($game->end_tile);
-        
-        if( ($col < 0 || $col > $maxCol) || ($row <0 || $row > $maxRow) ) {
+        if( $this->isOutOfBounds($from) ) {
             return ['error' => 'tile out of bounds'];
         }
         
-        $colTo = $col;
-        $rowTo = $row;
+        $type = ShipType::where('id', '=', $ship)->firstOrFail();
+        $rotation = strtolower($rotation);
+        list($colTo, $rowTo) = list($col, $row) = $this->tileToNum($from);
         
         switch($rotation) {
             case 'down':
@@ -97,18 +148,20 @@ class MoveController extends Controller
                 return ['error' => 'invalid direction: '.$rotation];
         }
         
-        if( ($colTo < 0 || $colTo > $maxCol) || ($rowTo <0 || $rowTo > $maxRow) ) {
+        if( $this->isOutOfBounds($this->numToTile($colTo, $rowTo)) ) {
             return ['error' => 'tile out of bounds'];
         }
         
         $move = new Move;
         $move->user_id = Auth::user()->id;
-        $move->game_id = $game->id;
+        $move->game_id = $this->game->id;
         $move->action = 'put';
         $move->source_tile = $from;
         $move->ship_type = $type->id;
         $move->target_tile = $this->numToTile($colTo, $rowTo);
         $move->save();
+        
+        
         
         return $move;
     }
@@ -122,21 +175,16 @@ class MoveController extends Controller
      */
     public function hit($id, $tile)
     {
-        if( !$this->sanity_check($id) ) return ['error' => 'failed sanity check'];
-        $game = Game::where('public_id', '=', $id)->firstOrFail();
+        $init = $this->initialize($id);
+        if( $init !== [true] ) { return $init; }
         
-        // move out of bounds check to $game->outOfBounds(tile)
-        
-        list($col, $row) = $this->tileToNum($tile);
-        list($maxCol, $maxRow) = $this->tileToNum($game->end_tile);
-        
-        if( ($col < 0 || $col > $maxCol) || ($row <0 || $row > $maxRow) ) {
+        if( $this->isOutOfBounds($tile) ) {
             return ['error' => 'tile out of bounds'];
         }
         
         $move = new Move;
         $move->user_id = Auth::user()->id;
-        $move->game_id = $game->id;
+        $move->game_id = $this->game->id;
         $move->action = 'hit';
         $move->target_tile = $tile;
         $move->save();
@@ -160,16 +208,20 @@ class MoveController extends Controller
      */
     public function sanity_check($id, $nomoves = false)
     {
-        if( !Auth::check() ) return ["error" => 'log in'];
-        $game = Game::where('public_id', '=', $id)->firstOrFail();
-        if(Auth::user()->id != $game->player1 && Auth::user()->id != $game->player2) return ["access denied"];
-        if($game->player2 == null) return [false];
+        if( $this->game === null ) {
+            $init = $this->initialize($id, $nomoves);
+            if( $init === [true] ) { return true; }
+            else { return $init; }
+        }
+        if( !Auth::check() ) { return 'log in'; }
+        if(Auth::user()->id != $this->game->player1 && Auth::user()->id != $this->game->player2) { return "access denied"; }
+        if($this->game->player2 == null) { return "awaiting second player"; }
         
-        if( $nomoves ) return [true];
-        $moves = Move::where('game_id', '=', $game->id)
-                     ->where('action', '=', '1');
-        
-        // verify that all ships have been placed
-        return [true];
+        if( $nomoves ) { return true; }
+        /* verify that all ships have been placed
+         * $moves = Move::where('game_id', '=', $this->game->id)
+         *              ->where('action', '=', '1');
+         */
+        return true;
     }
 }

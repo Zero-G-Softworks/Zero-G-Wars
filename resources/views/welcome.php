@@ -37,7 +37,7 @@
             
             td {
                 width: 50px;
-                height: 50px;
+                height: 40px;
             }
         </style>
     </head>

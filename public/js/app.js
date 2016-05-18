@@ -18,7 +18,7 @@ window.app.controller( 'MainController', [ '$http', '$interval', '$location', fu
     
     //var api_base = 'http://localhost/ZeroGWars/public/api/v1';
     var api_base = './api/v1';
-    var site_base = 'http://localhost/ZeroGWars/public';
+    var site_base = '/ZeroGWars/public';
     var user = '';
     ctrl.game = '';
     var wait;

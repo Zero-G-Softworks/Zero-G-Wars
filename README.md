@@ -8,17 +8,21 @@ The game's first milestone is to be a full implementation of the classic
 board game, with incremental feature upgrades in future milestones.
 
 ## Technologies
-PHP, Laravel 5
-JavaScript, AngularJS
-PostgreSQL
-Travis CI
+- PHP, Laravel 5
+- JavaScript, AngularJS
+- PostgreSQL
+- Travis CI
 
 ## Milestones
 ### Alpha 1
 Alpha 1 will introduce the basic game functionality. Bonuses do not need to be implemented yet. The UI does not need to be complete nor even exist, it can simply be playable from console. Users may be created via a direct database query. This will introduce the database structure, server project framework, client project framework, networking code, server implementation of the basic game, and basic model implementation of the client.
 
+PHPUnit test cases should also be implemented.
+
 ### Alpha 2
 Alpha 2 will introduce the basic UI, for the base game (minus bonuses). The art does not need to be complete, however, placeholders need to be created during this time. The client implementation of the model will be completed at this time.
+
+Basic localization features should be implemented.
 
 ### Alpha 3
 Alpha 3 will introduce the bonuses, they will be implemented client and server side.

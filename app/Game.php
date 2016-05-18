@@ -36,7 +36,7 @@ class Game extends Model
      * 
      * @var string
      */
-    public $end_tile = "O15";
+    private $end_tile = "O15";
 
     /**
      * Find a particular game
@@ -48,5 +48,15 @@ class Game extends Model
         $game = Game::findOrFail($id);
 
         return $game;
+    }
+
+    /**
+     * Get the last tile of the game board as a tile coordinate.
+     *
+     * @return tile
+     */
+    public function getEndTile()
+    {
+        return $this->end_tile;
     }
 }

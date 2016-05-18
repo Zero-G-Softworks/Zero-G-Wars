@@ -10,16 +10,10 @@ use ZeroGWars\Move;
 use ZeroGWars\ShipType;
 use ZeroGWars\Game;
 use ZeroGWars\GameState;
+use ZeroGWars\Utilities\GameUtilities;
 
 class MoveController extends Controller
 {
-    private $alphabet = array( 'a', 'b', 'c', 'd', 'e',
-                               'f', 'g', 'h', 'i', 'j',
-                               'k', 'l', 'm', 'n', 'o',
-                               'p', 'q', 'r', 's', 't',
-                               'u', 'v', 'w', 'x', 'y',
-                               'z'
-                             );
     
     private $game = null;
     private $game_state = null;
@@ -64,52 +58,6 @@ class MoveController extends Controller
     }
 
     /**
-     * Convert a number pair to a tile address.
-     *
-     * @param  int  $col
-     * @param  int  $row
-     * @return Response
-     */
-    public function numToTile($col, $row)
-    {
-        
-        return strtoupper($this->alphabet[$col-1]) . $row;
-    }
-
-    /**
-     * Convert a tile address to a number pair.
-     *
-     * @param  string  $tile
-     * @return Response
-     */
-    public function tileToNum($tile)
-    {
-        $tile = strtolower($tile);
-        preg_match('/([a-z]+)([0-9]+)/', $tile, $matches);
-        $col = 0;
-        for( $i = 0; $i < strlen($matches[1]); $i++ ) {
-            $charVal = intval( ord($matches[1][$i]) - 96 );
-            $decimal = pow(26, strlen($matches[1])-$i-1);
-            $col += $charVal * $decimal;
-        }
-        $row = intval($matches[2]);
-        return [$col, $row];
-    }
-    
-    private function isOutOfBounds($tile)
-    {
-        list($col, $row) = $this->tileToNum($tile);
-        list($maxCol, $maxRow) = $this->tileToNum($this->game->end_tile);
-        
-        if( ($col < 0 || $col > $maxCol) || ($row <0 || $row > $maxRow) ) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /**
      * Place the ship on the board based on a starting tile and a rotation.
      *
      * @param  int     $id
@@ -123,13 +71,13 @@ class MoveController extends Controller
         $init = $this->initialize($id, true);
         if( $init !== [true] ) { return $init; }
         
-        if( $this->isOutOfBounds($from) ) {
+        if( GameUtilities::isOutOfBounds($from, $this->game->getEndTile()) ) {
             return ['error' => 'tile out of bounds'];
         }
         
         $type = ShipType::where('id', '=', $ship)->firstOrFail();
         $rotation = strtolower($rotation);
-        list($colTo, $rowTo) = list($col, $row) = $this->tileToNum($from);
+        list($colTo, $rowTo) = list($col, $row) = GameUtilities::tileToNum($from);
         
         switch($rotation) {
             case 'down':
@@ -148,7 +96,7 @@ class MoveController extends Controller
                 return ['error' => 'invalid direction: '.$rotation];
         }
         
-        if( $this->isOutOfBounds($this->numToTile($colTo, $rowTo)) ) {
+        if( GameUtilities::isOutOfBounds(GameUtilities::numToTile($colTo, $rowTo), $this->game->getEndTile()) ) {
             return ['error' => 'tile out of bounds'];
         }
         
@@ -158,7 +106,7 @@ class MoveController extends Controller
         $move->action = 'put';
         $move->source_tile = $from;
         $move->ship_type = $type->id;
-        $move->target_tile = $this->numToTile($colTo, $rowTo);
+        $move->target_tile = GameUtilities::numToTile($colTo, $rowTo);
         $move->save();
         
         
@@ -178,7 +126,7 @@ class MoveController extends Controller
         $init = $this->initialize($id);
         if( $init !== [true] ) { return $init; }
         
-        if( $this->isOutOfBounds($tile) ) {
+        if( GameUtilities::isOutOfBounds($tile, $this->game->getEndTile()) ) {
             return ['error' => 'tile out of bounds'];
         }
         
